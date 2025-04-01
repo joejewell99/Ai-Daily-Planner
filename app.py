@@ -5,11 +5,21 @@ import os
 venv_path = os.path.join(os.getcwd(), ".venv", "Scripts", "python.exe")
 
 def run_backend():
-    subprocess.Popen([venv_path, "backend.py"])
+    return subprocess.Popen([venv_path, "backend.py"])
 
 def run_frontend():
-    subprocess.Popen([venv_path, "frontend.py"])
+    return subprocess.Popen([venv_path, "frontend.py"])
+
+def run_app():
+    backend_process = run_backend()
+    frontend_process = run_frontend()
+
+    # Wait for the frontend process to terminate
+    frontend_process.wait()
+
+    # Once frontend is closed, terminate the backend process
+    backend_process.terminate()
+    backend_process.wait()
 
 if __name__ == '__main__':
-    run_backend()
-    run_frontend()
+    run_app()

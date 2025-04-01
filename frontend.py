@@ -2,48 +2,57 @@ import re
 import sys
 import requests
 from PyQt6.QtWidgets import (
-        QApplication, QWidget, QVBoxLayout, QLabel, QPushButton,
-        QLineEdit, QFormLayout, QHBoxLayout, QListWidget, QMessageBox
-    )
+    QApplication, QWidget, QVBoxLayout, QLabel, QPushButton,
+    QLineEdit, QFormLayout, QHBoxLayout, QListWidget, QMessageBox, QCalendarWidget
+)
 from PyQt6.QtGui import QFont, QColor, QPalette
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, QCoreApplication
+
+import logging
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,  # Set the level to INFO to capture messages of level INFO and higher
+    format='%(asctime)s - %(levelname)s - %(message)s',  # Customize log format
+    handlers=[
+        logging.StreamHandler(),  # Output logs to the console
+        logging.FileHandler('app.log')  # Also output logs to a file
+    ]
+)
 
 API_URL = "http://127.0.0.1:5000/schedule"
-
 
 class ScheduleApp(QWidget):
     def __init__(self):
         super().__init__()
 
         self.setWindowTitle("🗓️ AI Daily Planner")
-        self.setGeometry(200, 200, 500, 450)
-        self.setStyleSheet(self.load_styles())  # Apply styles
+        self.setGeometry(200, 200, 900, 450)
+        self.setStyleSheet(self.load_styles())
 
-        self.layout = QVBoxLayout()
+        self.layout = QHBoxLayout()
 
-        # Title
+        left_layout = QVBoxLayout()
+
         self.title_label = QLabel("📅 Today's Schedule")
         self.title_label.setFont(QFont("Arial", 14, QFont.Weight.Bold))
         self.title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.layout.addWidget(self.title_label)
+        left_layout.addWidget(self.title_label)
 
-        # Schedule List
         self.task_list = QListWidget()
         self.task_list.setStyleSheet(
             "QListWidget { background-color: #1e1e1e; color: white; border-radius: 8px; padding: 5px; }"
         )
-        self.task_list.itemClicked.connect(self.select_task)  # Auto-fill form on selection
-        self.layout.addWidget(self.task_list)
+        self.task_list.itemClicked.connect(self.select_task)  # Connect to select_task
+        left_layout.addWidget(self.task_list)
 
-        # Add Task Inputs
         form_layout = QFormLayout()
         self.task_name_input = QLineEdit()
         self.task_time_input = QLineEdit()
         form_layout.addRow("📝 Task Name:", self.task_name_input)
         form_layout.addRow("⏰ Task Time:", self.task_time_input)
-        self.layout.addLayout(form_layout)
+        left_layout.addLayout(form_layout)
 
-        # Buttons
         button_layout = QHBoxLayout()
         self.add_button = QPushButton("➕ Add Task")
         self.edit_button = QPushButton("✏️ Edit Task")
@@ -51,9 +60,18 @@ class ScheduleApp(QWidget):
         button_layout.addWidget(self.add_button)
         button_layout.addWidget(self.edit_button)
         button_layout.addWidget(self.delete_button)
-        self.layout.addLayout(button_layout)
+        left_layout.addLayout(button_layout)
 
-        # Connect Buttons to Actions
+        self.layout.addLayout(left_layout, 1)
+
+        self.calendar = QCalendarWidget()
+        self.calendar.setStyleSheet(
+            "QCalendarWidget { background-color: #1e1e1e; color: white; border-radius: 8px; padding: 10px; }"
+            "QHeaderView::section { background-color: #2e2e2e; color: white; }"
+            "QCalendarWidget QAbstractItemView:enabled { background-color: #2e2e2e; }"
+        )
+        self.layout.addWidget(self.calendar, 2)
+
         self.add_button.clicked.connect(self.add_task)
         self.edit_button.clicked.connect(self.edit_task)
         self.delete_button.clicked.connect(self.delete_task)
@@ -62,41 +80,16 @@ class ScheduleApp(QWidget):
         self.fetch_schedule()
 
     def load_styles(self):
-        """Returns modern CSS styles for the app."""
         return """
-            QWidget {
-                background-color: #121212;
-                color: white;
-                font-size: 14px;
-            }
-            QLabel {
-                color: #ffcc00;
-                font-size: 16px;
-            }
-            QPushButton {
-                background-color: #ffcc00;
-                color: black;
-                border-radius: 10px;
-                padding: 8px;
-                font-size: 14px;
-            }
-            QPushButton:hover {
-                background-color: #ffaa00;
-            }
-            QPushButton:pressed {
-                background-color: #cc8800;
-            }
-            QLineEdit {
-                background-color: #1e1e1e;
-                color: white;
-                border: 2px solid #ffcc00;
-                border-radius: 5px;
-                padding: 5px;
-            }
+            QWidget { background-color: #121212; color: white; font-size: 14px; }
+            QLabel { color: #ffcc00; font-size: 16px; }
+            QPushButton { background-color: #ffcc00; color: black; border-radius: 10px; padding: 8px; font-size: 14px; }
+            QPushButton:hover { background-color: #ffaa00; }
+            QPushButton:pressed { background-color: #cc8800; }
+            QLineEdit { background-color: #1e1e1e; color: white; border: 2px solid #ffcc00; border-radius: 5px; padding: 5px; }
         """
 
     def fetch_schedule(self):
-        """Fetch the schedule from the Flask API and update the UI."""
         self.task_list.clear()
         try:
             response = requests.get(API_URL)
@@ -110,7 +103,6 @@ class ScheduleApp(QWidget):
             QMessageBox.critical(self, "Network Error", f"Failed to connect to server!\n{str(e)}")
 
     def add_task(self):
-        """Send a new task to the backend."""
         name = self.task_name_input.text().strip()
         time = self.task_time_input.text().strip()
         time_pattern = r'^(0?[1-9]|1[0-2]):([0-5][0-9])\s*(AM|PM)$'
@@ -124,7 +116,7 @@ class ScheduleApp(QWidget):
         try:
             response = requests.post(API_URL, json={"name": name, "time": time})
             if response.status_code == 201:
-                QMessageBox.information(self, "Success", "Task added successfully!")
+                print("Task added successfully!")
                 self.task_name_input.clear()
                 self.task_time_input.clear()
                 self.fetch_schedule()
@@ -134,7 +126,6 @@ class ScheduleApp(QWidget):
             QMessageBox.critical(self, "Network Error", f"Could not send request!\n{str(e)}")
 
     def edit_task(self):
-        """Edit an existing task."""
         selected_item = self.task_list.currentItem()
         if not selected_item:
             QMessageBox.warning(self, "Selection Error", "Select a task to edit!")
@@ -155,7 +146,7 @@ class ScheduleApp(QWidget):
         try:
             response = requests.put(f"{API_URL}/{task_id}", json={"name": name, "time": time})
             if response.status_code == 200:
-                QMessageBox.information(self, "Success", "Task updated successfully!")
+                logging.info("Task edited successfully!")
                 self.fetch_schedule()
             else:
                 QMessageBox.warning(self, "Error", "Failed to update task.")
@@ -163,7 +154,6 @@ class ScheduleApp(QWidget):
             QMessageBox.critical(self, "Network Error", f"Could not send request!\n{str(e)}")
 
     def delete_task(self):
-        """Deletes a selected task and updates the UI."""
         selected_item = self.task_list.currentItem()
         if not selected_item:
             QMessageBox.warning(self, "Selection Error", "Select a task to delete!")
@@ -174,26 +164,22 @@ class ScheduleApp(QWidget):
         try:
             response = requests.delete(f"{API_URL}/{task_id}")
             if response.status_code == 200:
-                QMessageBox.information(self, "Success", "Task deleted successfully!")
-
-                # Refresh the schedule to update task numbers
+                logging.info("Task deleted successfully!")
                 self.fetch_schedule()
             else:
                 QMessageBox.warning(self, "Error", "Failed to delete task.")
         except requests.exceptions.RequestException as e:
             QMessageBox.critical(self, "Network Error", f"Could not send request!\n{str(e)}")
 
-    def select_task(self):
-        """Autofill task details when selecting from list."""
-        selected_item = self.task_list.currentItem()
-        if selected_item:
-            task_data = selected_item.text().split(". ", 1)[1].split(" - ")
-            self.task_time_input.setText(task_data[0])
-            self.task_name_input.setText(task_data[1])
+    def select_task(self, item):
+        task_id = int(item.text().split(".")[0])
+        print(f"Selected task ID: {task_id}")
 
+    def closeEvent(self, event):
+        QCoreApplication.quit()
+        event.accept()
 
-# Run the PyQt Application
-if __name__ == "__main__":
+if __name__ == '__main__':
     app = QApplication(sys.argv)
     window = ScheduleApp()
     window.show()
