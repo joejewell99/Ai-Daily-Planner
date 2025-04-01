@@ -39,26 +39,3 @@ tasks = get_all_tasks()
 for task in tasks:
     print(task)
 
-def insert_task(task_name, priority, start_time, end_time, duration=None):
-    conn = sqlite3.connect('tasks.db')
-    cursor = conn.cursor()
-
-    cursor.execute('''
-        INSERT INTO tasks (task_name, priority, start_time, end_time, duration)
-        VALUES (?, ?, ?, ?, ?)
-    ''', (task_name, priority, start_time, end_time, duration))
-
-    conn.commit()
-    conn.close()
-
-def reset_tasks():
-    """Deletes all tasks and resets the ID sequence."""
-    conn = sqlite3.connect('tasks.db')
-    cursor = conn.cursor()
-
-    # Reset the auto-increment counter (SQLite specific)
-    cursor.execute("DELETE FROM sqlite_sequence WHERE name='tasks'")
-
-    conn.commit()
-    conn.close()
-    print("Tasks table has been reset.")

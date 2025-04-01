@@ -1,3 +1,4 @@
+import re
 import sys
 import requests
 from PyQt6.QtWidgets import (
@@ -112,8 +113,12 @@ class ScheduleApp(QWidget):
         """Send a new task to the backend."""
         name = self.task_name_input.text().strip()
         time = self.task_time_input.text().strip()
+        time_pattern = r'^(0?[1-9]|1[0-2]):([0-5][0-9])\s*(AM|PM)$'
         if not name or not time:
             QMessageBox.warning(self, "Input Error", "Task name and time cannot be empty!")
+            return
+        elif not re.match(time_pattern, time):
+            QMessageBox.warning(self, "Input Error", "Please enter time in the format HH:MM AM/PM or H:MM AM/PM.")
             return
 
         try:
@@ -138,9 +143,13 @@ class ScheduleApp(QWidget):
         task_id = int(selected_item.text().split(".")[0])
         name = self.task_name_input.text().strip()
         time = self.task_time_input.text().strip()
+        time_pattern = r'^(0?[1-9]|1[0-2]):([0-5][0-9])\s*(AM|PM)$'
 
         if not name and not time:
             QMessageBox.warning(self, "Input Error", "Enter a new name or time to edit!")
+            return
+        elif not re.match(time_pattern, time):
+            QMessageBox.warning(self, "Input Error", "Please enter time in the format HH:MM AM/PM or H:MM AM/PM.")
             return
 
         try:
@@ -154,7 +163,7 @@ class ScheduleApp(QWidget):
             QMessageBox.critical(self, "Network Error", f"Could not send request!\n{str(e)}")
 
     def delete_task(self):
-        """Delete a selected task."""
+        """Deletes a selected task and updates the UI."""
         selected_item = self.task_list.currentItem()
         if not selected_item:
             QMessageBox.warning(self, "Selection Error", "Select a task to delete!")
@@ -166,6 +175,8 @@ class ScheduleApp(QWidget):
             response = requests.delete(f"{API_URL}/{task_id}")
             if response.status_code == 200:
                 QMessageBox.information(self, "Success", "Task deleted successfully!")
+
+                # Refresh the schedule to update task numbers
                 self.fetch_schedule()
             else:
                 QMessageBox.warning(self, "Error", "Failed to delete task.")
