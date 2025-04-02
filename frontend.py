@@ -1,11 +1,15 @@
 import re
 import sys
+import random  # ✅ Make sure this is at the top of your file
+
+
 import requests
 from PyQt6.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QLabel, QPushButton,
-    QLineEdit, QFormLayout, QHBoxLayout, QListWidget, QMessageBox, QCalendarWidget, QTableWidget, QSizePolicy
+    QLineEdit, QFormLayout, QHBoxLayout, QListWidget, QMessageBox, QCalendarWidget, QTableWidget, QSizePolicy,
+    QHeaderView, QTableWidgetItem
 )
-from PyQt6.QtGui import QFont, QColor, QPalette
+from PyQt6.QtGui import QFont, QColor, QPalette, QBrush
 from PyQt6.QtCore import Qt, QCoreApplication
 
 import logging
@@ -78,16 +82,30 @@ class ScheduleApp(QWidget):
             "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"
         ])
         self.schedule_table.setVerticalHeaderLabels([f"{hour}:00" for hour in range(24)])
-        self.schedule_table.setStyleSheet("background-color: #1e1e1e; color: black;")
+        # Create a QTableWidgetIt
+
+        # Set the item in a specific row and column
+
         self.schedule_table.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)  # Proper resizing
+        # Make columns resize dynamically when window size changes
+        self.schedule_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        self.schedule_table.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        self.schedule_table.setDragEnabled(True)
+        self.schedule_table.setAcceptDrops(True)
+        self.schedule_table.setDropIndicatorShown(True)
+        self.schedule_table.cellChanged.connect(self.cell_changed)
         right_layout.addWidget(self.schedule_table)
+
+        #Save to pdf button
+        self.save_pdf_button = QPushButton("💾 Save to PDF")
+        right_layout.addWidget(self.save_pdf_button)
 
         # Refresh Button
         self.refresh_button = QPushButton("🔄 Refresh Schedule")
         self.refresh_button.clicked.connect(self.fetch_schedule)
         right_layout.addWidget(self.refresh_button)
 
-        self.layout.addLayout(right_layout, 2)  # Makes the right side larger than the left
+        self.layout.addLayout(right_layout, 3)  # Makes the right side larger than the left
 
         self.add_button.clicked.connect(self.add_task)
         self.edit_button.clicked.connect(self.edit_task)
@@ -104,6 +122,38 @@ class ScheduleApp(QWidget):
             QPushButton:hover { background-color: #ffaa00; }
             QPushButton:pressed { background-color: #cc8800; }
             QLineEdit { background-color: #1e1e1e; color: white; border: 2px solid #ffcc00; border-radius: 5px; padding: 5px; }
+
+            /* Styling for the table */
+            QTableWidget {
+                background-color: none;
+                color: white;
+                border: none;
+                font-size: 14px;
+            }
+
+            QTableWidget QTableCornerButton::section {
+                background-color: #1e1e1e;
+            }
+
+            /* Table header styles */
+            QHeaderView::section {
+                background-color: #2a2a2a;
+                color: White;
+                border: 1px solid #333;
+                padding: 5px;
+                font-weight: bold;
+            }
+
+        
+            /* Hover effect for table cells */
+            QTableWidget::item:hover {
+                background-color: #333333;
+            }
+
+            /* Selecting a row or column */
+            QTableWidget::item:selected {
+                background-color: #ffaa00;
+            }
         """
 
     def fetch_schedule(self):
@@ -114,6 +164,7 @@ class ScheduleApp(QWidget):
                 self.schedule = response.json()
                 for task in self.schedule:
                     self.task_list.addItem(f"{task['id']}. {task['time']} - {task['name']}")
+
             else:
                 QMessageBox.warning(self, "Error", "Failed to load schedule from the server!")
         except requests.exceptions.RequestException as e:
@@ -195,6 +246,30 @@ class ScheduleApp(QWidget):
     def closeEvent(self, event):
         QCoreApplication.quit()
         event.accept()
+
+    def cell_changed(self, row, column):
+        self.schedule_table.blockSignals(True)  # 🔴 Stop signals to prevent infinite loop
+
+        task_item = self.schedule_table.item(row, column)
+        if not task_item:
+            task_item = QTableWidgetItem()
+            self.schedule_table.setItem(row, column, task_item)
+
+        if task_item.text().strip():
+            r, g, b = random.randint(50, 200), random.randint(50, 200), random.randint(50, 200)
+            color = QColor(r, g, b)
+
+            task_item.setBackground(QBrush(color))  # ✅ Change background safely
+            task_item.setForeground(QBrush(QColor(255, 255, 255)))  # ✅ Keep text visible
+
+            logging.info(f"Task moved to {row}, {column} with new color {r}, {g}, {b}")
+
+        self.schedule_table.blockSignals(False)  # 🟢 Re-enable signals
+
+    def update_table(self):
+
+        return
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
