@@ -3,7 +3,7 @@ import sys
 import requests
 from PyQt6.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QLabel, QPushButton,
-    QLineEdit, QFormLayout, QHBoxLayout, QListWidget, QMessageBox, QCalendarWidget
+    QLineEdit, QFormLayout, QHBoxLayout, QListWidget, QMessageBox, QCalendarWidget, QTableWidget, QSizePolicy
 )
 from PyQt6.QtGui import QFont, QColor, QPalette
 from PyQt6.QtCore import Qt, QCoreApplication
@@ -22,18 +22,20 @@ logging.basicConfig(
 
 API_URL = "http://127.0.0.1:5000/schedule"
 
+
 class ScheduleApp(QWidget):
     def __init__(self):
         super().__init__()
 
         self.setWindowTitle("🗓️ AI Daily Planner")
-        self.setGeometry(200, 200, 900, 450)
+        self.setGeometry(200, 200, 900, 600)
         self.setStyleSheet(self.load_styles())
 
         self.layout = QHBoxLayout()
-
         left_layout = QVBoxLayout()
+        right_layout = QVBoxLayout()
 
+        # Today's Schedule
         self.title_label = QLabel("📅 Today's Schedule")
         self.title_label.setFont(QFont("Arial", 14, QFont.Weight.Bold))
         self.title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -41,9 +43,8 @@ class ScheduleApp(QWidget):
 
         self.task_list = QListWidget()
         self.task_list.setStyleSheet(
-            "QListWidget { background-color: #1e1e1e; color: white; border-radius: 8px; padding: 5px; }"
-        )
-        self.task_list.itemClicked.connect(self.select_task)  # Connect to select_task
+            "QListWidget { background-color: #1e1e1e; color: white; border-radius: 8px; padding: 5px; }")
+        self.task_list.itemClicked.connect(self.select_task)
         left_layout.addWidget(self.task_list)
 
         form_layout = QFormLayout()
@@ -64,13 +65,29 @@ class ScheduleApp(QWidget):
 
         self.layout.addLayout(left_layout, 1)
 
-        self.calendar = QCalendarWidget()
-        self.calendar.setStyleSheet(
-            "QCalendarWidget { background-color: #1e1e1e; color: white; border-radius: 8px; padding: 10px; }"
-            "QHeaderView::section { background-color: #2e2e2e; color: white; }"
-            "QCalendarWidget QAbstractItemView:enabled { background-color: #2e2e2e; }"
-        )
-        self.layout.addWidget(self.calendar, 2)
+        # Weekly Schedule
+        self.weekly_label = QLabel("📅 Weekly Schedule")
+        self.weekly_label.setFont(QFont("Arial", 14, QFont.Weight.Bold))
+        self.weekly_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        right_layout.addWidget(self.weekly_label)
+
+        self.schedule_table = QTableWidget()
+        self.schedule_table.setColumnCount(7)
+        self.schedule_table.setRowCount(24)
+        self.schedule_table.setHorizontalHeaderLabels([
+            "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"
+        ])
+        self.schedule_table.setVerticalHeaderLabels([f"{hour}:00" for hour in range(24)])
+        self.schedule_table.setStyleSheet("background-color: #1e1e1e; color: black;")
+        self.schedule_table.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)  # Proper resizing
+        right_layout.addWidget(self.schedule_table)
+
+        # Refresh Button
+        self.refresh_button = QPushButton("🔄 Refresh Schedule")
+        self.refresh_button.clicked.connect(self.fetch_schedule)
+        right_layout.addWidget(self.refresh_button)
+
+        self.layout.addLayout(right_layout, 2)  # Makes the right side larger than the left
 
         self.add_button.clicked.connect(self.add_task)
         self.edit_button.clicked.connect(self.edit_task)
