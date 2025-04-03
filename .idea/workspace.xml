@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="021bbd14-122f-4c8a-9b59-b0ae9a8e53fa" name="Changes" comment="Added Google calendar-like weekly schedule display">
+    <list default="true" id="021bbd14-122f-4c8a-9b59-b0ae9a8e53fa" name="Changes" comment="Added save to Pdf and task colouring">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend.py" beforeDir="false" afterPath="$PROJECT_DIR$/frontend.py" afterDir="false" />
     </list>
@@ -61,23 +61,23 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Flask server.DailyPlannerAi.executor": "Run",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
-    "git-widget-placeholder": "drag-and-drop-calendar",
-    "last_opened_file_path": "D:/Software_Engineering/DailyPlannerAi",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Flask server.DailyPlannerAi.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;drag-and-drop-calendar&quot;,
+    &quot;last_opened_file_path&quot;: &quot;D:/Software_Engineering/DailyPlannerAi&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
       <recent name="D:\Software_Engineering\DailyPlannerAi" />
@@ -122,7 +122,9 @@
       <workItem from="1743510744167" duration="3427000" />
       <workItem from="1743514863388" duration="17041000" />
       <workItem from="1743532687230" duration="377000" />
-      <workItem from="1743593788835" duration="20852000" />
+      <workItem from="1743593788835" duration="24291000" />
+      <workItem from="1743682326664" duration="2194000" />
+      <workItem from="1743722300562" duration="749000" />
     </task>
     <task id="LOCAL-00001" summary="Basic Sql database added">
       <option name="closed" value="true" />
@@ -156,7 +158,15 @@
       <option name="project" value="LOCAL" />
       <updated>1743601791104</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="Added save to Pdf and task colouring">
+      <option name="closed" value="true" />
+      <created>1743621166960</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1743621166960</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -167,7 +177,8 @@
     <MESSAGE value="Added error handling for incorrect inputs" />
     <MESSAGE value="Added Logging and an app.log file" />
     <MESSAGE value="Added Google calendar-like weekly schedule display" />
-    <option name="LAST_COMMIT_MESSAGE" value="Added Google calendar-like weekly schedule display" />
+    <MESSAGE value="Added save to Pdf and task colouring" />
+    <option name="LAST_COMMIT_MESSAGE" value="Added save to Pdf and task colouring" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/DailyPlannerAi$DailyPlannerAi.coverage" NAME="DailyPlannerAi Coverage Results" MODIFIED="1743598356759" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />

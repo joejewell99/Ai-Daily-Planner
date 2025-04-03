@@ -1,7 +1,7 @@
 import re
 import sys
 import random  # ✅ Make sure this is at the top of your file
-
+import datetime
 
 import requests
 from PyQt6.QtWidgets import (
@@ -102,7 +102,7 @@ class ScheduleApp(QWidget):
 
         # Refresh Button
         self.refresh_button = QPushButton("🔄 Refresh Schedule")
-        self.refresh_button.clicked.connect(self.fetch_schedule)
+        self.refresh_button.clicked.connect(self.update_table)
         right_layout.addWidget(self.refresh_button)
 
         self.layout.addLayout(right_layout, 3)  # Makes the right side larger than the left
@@ -112,6 +112,7 @@ class ScheduleApp(QWidget):
         self.delete_button.clicked.connect(self.delete_task)
 
         self.setLayout(self.layout)
+        self.update_table()
         self.fetch_schedule()
 
     def load_styles(self):
@@ -267,8 +268,64 @@ class ScheduleApp(QWidget):
         self.schedule_table.blockSignals(False)  # 🟢 Re-enable signals
 
     def update_table(self):
+        try:
+            response = requests.get(API_URL)
+            if response.status_code == 200:
+                tasks = response.json()  # Get the task data from the response
 
-        return
+                # Clear any previous tasks from the table
+                for row in range(self.schedule_table.rowCount()):
+                    for col in range(self.schedule_table.columnCount()):
+                        self.schedule_table.setItem(row, col, None)  # Clear the cell
+
+                # Iterate over each task and add it to the correct time slot in the table
+                for task in tasks:
+                    task_name = task['name']
+                    task_time = task['time']
+
+                    # Convert the time string to a row (assuming the format is 'HH:MM AM/PM')
+                    row = self.get_row_from_time(task_time)
+                    if row is None:
+                        continue  # Skip tasks with invalid times
+
+                    # Find the column based on the day (you can map it to a specific column index)
+                    day_of_week = self.get_day_of_week()
+                    column = self.get_column_from_day(day_of_week)
+
+                    # Create a new item and set its text (task name)
+                    item = QTableWidgetItem(task_name)
+                    item.setForeground(QBrush(QColor("black")))  # Text color black
+                    item.setBackground(QBrush(QColor("lightblue")))  # Background color for task
+                    self.schedule_table.setItem(row, column, item)
+            else:
+                QMessageBox.warning(self, "Error", "Failed to load tasks from the server!")
+        except requests.exceptions.RequestException as e:
+            QMessageBox.critical(self, "Network Error", f"Failed to connect to server!\n{str(e)}")
+
+    def get_row_from_time(self, time):
+        """Convert a task time (HH:MM AM/PM) to a row index in the table."""
+        time_pattern = r'^(0?[1-9]|1[0-2]):([0-5][0-9])\s*(AM|PM)$'
+        match = re.match(time_pattern, time.strip())
+        if match:
+            hour = int(match.group(1))
+            if match.group(3) == 'PM' and hour != 12:
+                hour += 12
+            elif match.group(3) == 'AM' and hour == 12:
+                hour = 0
+            return hour  # Return the row index for the 24-hour format (0-23)
+        return None  # Return None if the time format is invalid
+
+    def get_day_of_week(self):
+        """Assign a day of the week (0-6) based on the current date."""
+        # Get the current date
+        current_date = datetime.datetime.now()
+
+        # Get the day of the week (Monday=0, Tuesday=1, ..., Sunday=6)
+        return current_date.weekday()
+
+    def get_column_from_day(self, day_of_week):
+        """Convert the day of the week (0-6) to a column index in the table."""
+        return day_of_week  # 0 = Monday, 1 = Tuesday, ..., 6 = Sunday
 
 
 if __name__ == '__main__':
