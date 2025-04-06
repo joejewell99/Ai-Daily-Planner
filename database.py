@@ -1,5 +1,7 @@
 import sqlite3
 
+import sqlite3
+
 def create_database():
     # Connect to SQLite database (it will create the database file if it doesn't exist)
     conn = sqlite3.connect('tasks.db')
@@ -13,16 +15,15 @@ def create_database():
             priority INTEGER,
             start_time TEXT,
             end_time TEXT,
-            duration REAL
+            duration REAL,
         )
     ''')
 
-    # Commit and close the connection
+    # Commit changes and close the connection
     conn.commit()
     conn.close()
 
-# Call the function to create the database and table
-create_database()
+
 
 def get_all_tasks():
     conn = sqlite3.connect('tasks.db')
