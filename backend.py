@@ -3,7 +3,7 @@ import sqlite3
 
 app = Flask(__name__)
 
-# Initialize database
+# Initialize database for tasks
 def init_db():
     with sqlite3.connect("tasks.db") as conn:
         cursor = conn.cursor()
@@ -11,32 +11,55 @@ def init_db():
             CREATE TABLE IF NOT EXISTS tasks (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT NOT NULL,
-                time TEXT NOT NULL
+                time TEXT NOT NULL,
+                color TEXT DEFAULT '#ffffff'
+            )
+        ''')
+        cursor.execute("PRAGMA table_info(tasks)")
+        columns = [col[1] for col in cursor.fetchall()]
+        if 'color' not in columns:
+            cursor.execute("ALTER TABLE tasks ADD COLUMN color TEXT DEFAULT '#ffffff'")
+        conn.commit()
+
+# Initialize database for training data
+def init_training_data_db():
+    with sqlite3.connect("trainingData.db") as conn:
+        cursor = conn.cursor()
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS tasks (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                time TEXT NOT NULL,
+                color TEXT DEFAULT '#ffffff'
             )
         ''')
         conn.commit()
 
+# Call the initialization functions once
 init_db()
+init_training_data_db()
 
 @app.route("/schedule", methods=["GET"])
 def get_tasks():
     with sqlite3.connect("tasks.db") as conn:
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM tasks")
-        tasks = [{"id": row[0], "name": row[1], "time": row[2]} for row in cursor.fetchall()]
+        tasks = [{"id": row[0], "name": row[1], "time": row[2], "color": row[3]} for row in cursor.fetchall()]
     return jsonify(tasks)
 
 @app.route("/schedule", methods=["POST"])
 def add_task():
     data = request.json
-    name, time = data.get("name"), data.get("time")
+    name = data.get("name")
+    time = data.get("time")
+    color = data.get("color", "#ffffff")
 
     if not name or not time:
         return jsonify({"error": "Name and time are required"}), 400
 
     with sqlite3.connect("tasks.db") as conn:
         cursor = conn.cursor()
-        cursor.execute("INSERT INTO tasks (name, time) VALUES (?, ?)", (name, time))
+        cursor.execute("INSERT INTO tasks (name, time, color) VALUES (?, ?, ?)", (name, time, color))
         conn.commit()
 
     return jsonify({"message": "Task added"}), 201
@@ -44,48 +67,67 @@ def add_task():
 @app.route("/schedule/<int:task_id>", methods=["PUT"])
 def edit_task(task_id):
     data = request.json
-    name, time = data.get("name"), data.get("time")
+    name = data.get("name")
+    time = data.get("time")
+    color = data.get("color")
 
-    if not name and not time:
-        return jsonify({"error": "Provide at least a name or time to update"}), 400
+    if not name and not time and not color:
+        return jsonify({"error": "Provide at least one field to update"}), 400
 
     with sqlite3.connect("tasks.db") as conn:
         cursor = conn.cursor()
+        updates = []
+        values = []
 
-        if name and time:
-            cursor.execute("UPDATE tasks SET name=?, time=? WHERE id=?", (name, time, task_id))
-        elif name:
-            cursor.execute("UPDATE tasks SET name=? WHERE id=?", (name, task_id))
-        elif time:
-            cursor.execute("UPDATE tasks SET time=? WHERE id=?", (time, task_id))
+        if name:
+            updates.append("name=?")
+            values.append(name)
+        if time:
+            updates.append("time=?")
+            values.append(time)
+        if color:
+            updates.append("color=?")
+            values.append(color)
 
+        values.append(task_id)
+        query = f"UPDATE tasks SET {', '.join(updates)} WHERE id=?"
+        cursor.execute(query, values)
         conn.commit()
 
     return jsonify({"message": "Task updated"}), 200
 
 @app.route("/schedule/<int:task_id>", methods=["DELETE"])
 def delete_task(task_id):
-    """Deletes a task, resets task IDs, and fixes sqlite_sequence."""
+    """Deletes a task, resets task IDs, and adds the task to the training data database."""
     conn = sqlite3.connect("tasks.db")
     cursor = conn.cursor()
 
-    # Check if task exists
+    # Retrieve the task data before deleting it
     cursor.execute("SELECT * FROM tasks WHERE id=?", (task_id,))
-    if cursor.fetchone() is None:
+    task = cursor.fetchone()
+
+    if task is None:
         conn.close()
         return jsonify({"error": "Task not found"}), 404
 
-    # Delete the selected task
+    # Add the task to the training data database (without the ID to avoid conflicts)
+    with sqlite3.connect("trainingData.db") as training_conn:
+        training_cursor = training_conn.cursor()
+        # Insert the task into the training database without the `id`
+        training_cursor.execute("INSERT INTO tasks (name, time, color) VALUES (?, ?, ?)",
+                                (task[1], task[2], task[3]))
+        training_conn.commit()
+
+    # Now delete the task from tasks.db
     cursor.execute("DELETE FROM tasks WHERE id=?", (task_id,))
     conn.commit()
 
-    # Reset task IDs and sqlite_sequence
+    # Reset task IDs (optional step)
     reset_task_ids()
 
     conn.close()
-    print(f"✅ Task {task_id} deleted and IDs updated.")
-
-    return jsonify({"message": f"Task {task_id} deleted and IDs reset"}), 200
+    print(f"✅ Task {task_id} deleted and added to training data.")
+    return jsonify({"message": f"Task {task_id} deleted and added to training data."}), 200
 
 def reset_task_ids():
     """Reorders task IDs sequentially (1,2,3...) and resets sqlite_sequence."""
@@ -99,11 +141,8 @@ def reset_task_ids():
         cursor.execute("UPDATE tasks SET id = ? WHERE id = ?", (index, old_id))
 
     conn.commit()
-
-    # Reset the sqlite_sequence so IDs start from the highest existing one
     cursor.execute("DELETE FROM sqlite_sequence WHERE name='tasks'")
     conn.commit()
-
     conn.close()
     print("✅ Task IDs and sqlite_sequence reset successfully.")
 
