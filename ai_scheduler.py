@@ -33,57 +33,48 @@ def convert_minutes_to_time(minutes):
 
 def train_model(df):
     """Train the RandomForestRegressor model using task data"""
-    # Check the distribution of 'Terra' tasks in your training data
+
     df_terra = df[df['name'] == 'Terra']
-    print(df_terra['time'].value_counts())  # This will print the distribution of times for Terra
+    print(df_terra['time'].value_counts())
 
-    # Convert time to a numerical feature (e.g., extract the hour from time)
-    df['time_hour'] = pd.to_datetime(df['time'], errors='coerce').dt.hour
-
-    # Convert target 'time' to numerical values (e.g., minutes from midnight)
+    # Convert time strings to minutes from midnight
     df['time_minutes'] = df['time'].apply(convert_time_to_minutes)
 
-    # One-hot encode the task names
+    # Label encode task names
     le_task = LabelEncoder()
     df['task_encoded'] = le_task.fit_transform(df['name'])
 
-    # Prepare the features (task and time)
-    X = df[['task_encoded', 'time_hour']]  # Use task encoding and time in hour
-    y = df['time_minutes']  # Use the new 'time_minutes' as target
+    # Features and target
+    X = df[['task_encoded']]              # Only use task name as input
+    y = df['time_minutes']                # Predict minutes from midnight
 
-    # Train RandomForestRegressor model
     model = RandomForestRegressor()
     model.fit(X, y)
 
-    # Save the model and the label encoder
+    # Save model + encoder
     joblib.dump(model, "model.pkl")
     joblib.dump(le_task, "label_encoder.pkl")
     print("✅ Model and label encoder saved!")
 
 
+
 def generate_schedule(task_names):
     """Generate a predicted schedule using the trained model"""
     try:
-        # Load the trained model and label encoder
         model = joblib.load("model.pkl")
         le_task = joblib.load("label_encoder.pkl")
     except FileNotFoundError:
-        print("❌ Model not found. Train the model first using train_model(df).")
+        print("❌ Model not found. Train the model first.")
         return
 
-    # Encode the task names
+    # Encode task names
     encoded_tasks = le_task.transform(task_names)
-    # Create a dummy 'time_hour' feature (e.g., setting it to a default time like 9 AM for now)
-    time_hour_dummy = [9] * len(task_names)  # You can choose another time if you want
+    X_new = np.array(encoded_tasks).reshape(-1, 1)  # <-- keep it 1-feature
 
-    # Combine both encoded task names and time hour for prediction
-    X_new = np.array(list(zip(encoded_tasks, time_hour_dummy)))
-
-    # Make predictions (the predicted times will be in minutes)
-    predicted_times = model.predict(X_new)
-
-    # Convert predicted times back to time format (if needed)
-    predicted_times_in_format = [convert_minutes_to_time(minutes) for minutes in predicted_times]
+    # Predict time in minutes from midnight
+    predicted_minutes = model.predict(X_new)
+    predicted_minutes = [round(m) for m in predicted_minutes]
+    predicted_times = [convert_minutes_to_time(m) for m in predicted_minutes]
 
     # Save the predictions to the database
     conn = sqlite3.connect("predicted_schedule.db")
@@ -94,7 +85,7 @@ def generate_schedule(task_names):
         time TEXT
     )''')
 
-    for name, time in zip(task_names, predicted_times_in_format):
+    for name, time in zip(task_names, predicted_times):  # <-- use correct variable
         cursor.execute("INSERT INTO ai_schedule (name, time) VALUES (?, ?)", (name, time))
 
     conn.commit()

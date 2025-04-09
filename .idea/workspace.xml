@@ -4,13 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="021bbd14-122f-4c8a-9b59-b0ae9a8e53fa" name="Changes" comment="Added save to Pdf and task colouring">
-      <change afterPath="$PROJECT_DIR$/ai_scheduler.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources.xml" afterDir="false" />
+    <list default="true" id="021bbd14-122f-4c8a-9b59-b0ae9a8e53fa" name="Changes" comment="Ai progress">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/database.py" beforeDir="false" afterPath="$PROJECT_DIR$/database.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend.py" beforeDir="false" afterPath="$PROJECT_DIR$/frontend.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ai_scheduler.py" beforeDir="false" afterPath="$PROJECT_DIR$/ai_scheduler.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -132,6 +128,10 @@
       <workItem from="1743722300562" duration="749000" />
       <workItem from="1743774086923" duration="17811000" />
       <workItem from="1743863965589" duration="13869000" />
+      <workItem from="1743900683153" duration="99000" />
+      <workItem from="1743964610814" duration="22000" />
+      <workItem from="1744154570219" duration="4685000" />
+      <workItem from="1744200852653" duration="1363000" />
     </task>
     <task id="LOCAL-00001" summary="Basic Sql database added">
       <option name="closed" value="true" />
@@ -173,7 +173,15 @@
       <option name="project" value="LOCAL" />
       <updated>1743621166960</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="Ai progress">
+      <option name="closed" value="true" />
+      <created>1743900773579</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1743900773579</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -185,7 +193,8 @@
     <MESSAGE value="Added Logging and an app.log file" />
     <MESSAGE value="Added Google calendar-like weekly schedule display" />
     <MESSAGE value="Added save to Pdf and task colouring" />
-    <option name="LAST_COMMIT_MESSAGE" value="Added save to Pdf and task colouring" />
+    <MESSAGE value="Ai progress" />
+    <option name="LAST_COMMIT_MESSAGE" value="Ai progress" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/DailyPlannerAi$DailyPlannerAi.coverage" NAME="DailyPlannerAi Coverage Results" MODIFIED="1743784164763" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
